@@ -6,18 +6,7 @@ import (
 	"cdr.dev/coder-cli/coder-sdk"
 	"cdr.dev/coder-cli/internal/config"
 	"golang.org/x/xerrors"
-
-	"go.coder.com/flog"
 )
-
-// requireAuth exits the process with a nonzero exit code if the user is not authenticated to make requests
-func requireAuth() *coder.Client {
-	client, err := newClient()
-	if err != nil {
-		flog.Fatal("%v", err)
-	}
-	return client
-}
 
 func newClient() (*coder.Client, error) {
 	sessionToken, err := config.Session.Read()

@@ -79,11 +79,14 @@ coder secrets create aws-credentials --from-file ./credentials.json`,
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var (
-				client = requireAuth()
-				name   = args[0]
-				value  string
-				err    error
+				name  = args[0]
+				value string
+				err   error
 			)
+			client, err := newClient()
+			if err != nil {
+				return err
+			}
 			if fromLiteral != "" {
 				value = fromLiteral
 			} else if fromFile != "" {
@@ -135,7 +138,10 @@ coder secrets create aws-credentials --from-file ./credentials.json`,
 
 func listSecrets(userEmail *string) func(cmd *cobra.Command, _ []string) error {
 	return func(cmd *cobra.Command, _ []string) error {
-		client := requireAuth()
+		client, err := newClient()
+		if err != nil {
+			return err
+		}
 		user, err := client.UserByEmail(cmd.Context(), *userEmail)
 		if err != nil {
 			return xerrors.Errorf("get user %q by email: %w", *userEmail, err)
@@ -166,9 +172,12 @@ func listSecrets(userEmail *string) func(cmd *cobra.Command, _ []string) error {
 func makeViewSecret(userEmail *string) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		var (
-			client = requireAuth()
-			name   = args[0]
+			name = args[0]
 		)
+		client, err := newClient()
+		if err != nil {
+			return err
+		}
 		user, err := client.UserByEmail(cmd.Context(), *userEmail)
 		if err != nil {
 			return xerrors.Errorf("get user %q by email: %w", *userEmail, err)
@@ -189,9 +198,10 @@ func makeViewSecret(userEmail *string) func(cmd *cobra.Command, args []string) e
 
 func makeRemoveSecrets(userEmail *string) func(c *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		var (
-			client = requireAuth()
-		)
+		client, err := newClient()
+		if err != nil {
+			return err
+		}
 		user, err := client.UserByEmail(cmd.Context(), *userEmail)
 		if err != nil {
 			return xerrors.Errorf("get user %q by email: %w", *userEmail, err)

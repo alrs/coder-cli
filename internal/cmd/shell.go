@@ -96,10 +96,11 @@ func sendResizeEvents(ctx context.Context, termfd uintptr, process wsep.Process)
 }
 
 func runCommand(ctx context.Context, envName string, command string, args []string) error {
-	var (
-		entClient = requireAuth()
-	)
-	env, err := findEnv(ctx, entClient, envName, coder.Me)
+	client, err := newClient()
+	if err != nil {
+		return err
+	}
+	env, err := findEnv(ctx, client, envName, coder.Me)
 	if err != nil {
 		return err
 	}
@@ -118,7 +119,7 @@ func runCommand(ctx context.Context, envName string, command string, args []stri
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	conn, err := entClient.DialWsep(ctx, env)
+	conn, err := client.DialWsep(ctx, env)
 	if err != nil {
 		return err
 	}
@@ -157,7 +158,7 @@ func runCommand(ctx context.Context, envName string, command string, args []stri
 		stdin := process.Stdin()
 		defer stdin.Close()
 
-		ap := activity.NewPusher(entClient, env.ID, sshActivityName)
+		ap := activity.NewPusher(client, env.ID, sshActivityName)
 		wr := ap.Writer(stdin)
 		_, err := io.Copy(wr, os.Stdin)
 		if err != nil {
